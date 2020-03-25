@@ -7,7 +7,7 @@ import com.bncrypted.authenticator.model.UserCredentials;
 public interface AuthService {
 
     Token lease(UserCredentials userCredentials);
-    Token leaseGuest(UserCredentials userCredentials);
+    Token leaseGuest();
     TokenVerification verify(Token token);
 
 }
