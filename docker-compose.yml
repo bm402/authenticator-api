@@ -1,0 +1,33 @@
+version: "2.1"
+services:
+  authenticator-db:
+    container_name: authenticator-db
+    build: ./docker/authenticator-db
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks:
+      - authenticator-network
+    ports:
+      - "8432:5432"
+    environment:
+      - POSTGRES_USER=authuser
+      - POSTGRES_PASSWORD=authpass
+      - POSTGRES_DB=authenticator
+  authenticator-api:
+    build:
+      context: .
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    # image: bncrypted/authenticator-api
+    container_name: authenticator-api
+    depends_on:
+      - authenticator-db
+    ports:
+      - "8800:8080"
+    networks:
+      - authenticator-network
+networks:
+  authenticator-network:
+    driver: bridge

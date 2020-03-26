@@ -3,6 +3,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 	id 'java'
 	id "io.freefair.lombok" version "5.0.0-rc6"
+	id "org.flywaydb.flyway" version "6.3.2"
 }
 
 group = 'com.bncrypted'
@@ -13,13 +14,24 @@ repositories {
 	mavenCentral()
 }
 
+bootJar {
+	archiveFileName = "authenticator-api.jar"
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.postgresql:postgresql:42.2.11'
 
-	testImplementation('org.springframework.boot:spring-boot-starter-test')
-	testImplementation('org.assertj:assertj-core:3.15.0')
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.assertj:assertj-core:3.15.0'
 }
 
 test {
 	useJUnitPlatform()
+}
+
+flyway {
+	url = "jdbc:postgresql://192.168.99.100:8432/authenticator"
+	user = "authuser"
+	password = "authpass"
 }
