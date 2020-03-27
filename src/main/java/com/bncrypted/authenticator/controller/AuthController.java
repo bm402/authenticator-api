@@ -2,7 +2,7 @@ package com.bncrypted.authenticator.controller;
 
 import com.bncrypted.authenticator.model.Token;
 import com.bncrypted.authenticator.model.TokenVerification;
-import com.bncrypted.authenticator.model.UserCredentials;
+import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +22,8 @@ public class AuthController {
     }
 
     @PostMapping(value = "/lease")
-    public ResponseEntity<Token> lease(@RequestBody @Valid UserCredentials userCredentials) {
-        Token token = authService.lease(userCredentials);
+    public ResponseEntity<Token> lease(@RequestBody @Valid UserAndOtp userAndOtp) {
+        Token token = authService.lease(userAndOtp);
         return ResponseEntity.ok(token);
     }
 
