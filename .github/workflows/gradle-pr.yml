@@ -1,7 +1,7 @@
-name: Feature branch
+name: Pull request branch
 on:
-  push:
-    branches-ignore:
+  pull_request:
+    branches:
       - master
 jobs:
   test:
@@ -26,7 +26,15 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+      - name: Get PR number
+        uses: actions/github-script@0.3.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const core = require('@actions/core')
+            const prNumber = context.payload.number;
+            core.exportVariable('PR_NUMBER', prNumber);
       - name: Run scan
-        run: gradle sonarqube -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.branch.name=${GITHUB_REF##*/}
+        run: gradle sonarqube -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.pullrequest.key=$PR_NUMBER
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
