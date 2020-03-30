@@ -2,8 +2,10 @@ plugins {
 	id "org.springframework.boot" version "2.2.5.RELEASE"
 	id "io.spring.dependency-management" version "1.0.9.RELEASE"
 	id "java"
+	id "jacoco"
 	id "io.freefair.lombok" version "5.0.0-rc6"
 	id "org.flywaydb.flyway" version "6.3.2"
+	id "org.sonarqube" version "2.8"
 }
 
 group = "com.bncrypted"
@@ -36,10 +38,27 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
 
 flyway {
 	url = "jdbc:postgresql://192.168.99.100:8432/authenticator"
 	user = "authuser"
 	password = "authpass"
+}
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "bncrypted_authenticator-api"
+		property "sonar.organization", "bncrypted"
+		property "sonar.host.url", "https://sonarcloud.io"
+		property "sonar.coverage.exclusions", "**/controller/**, **/model/**, **/repository/**, **/*Application*"
+	}
+}
+
+jacocoTestReport {
+	executionData(test)
+	reports {
+		xml.enabled true
+	}
 }

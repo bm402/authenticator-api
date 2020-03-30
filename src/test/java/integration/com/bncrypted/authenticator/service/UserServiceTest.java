@@ -113,4 +113,14 @@ public class UserServiceTest extends IntegrationBaseTest {
         assertNotNull(credentialsFromDb);
     }
 
+    @Test
+    void whenDeletingUserThatDoesNotExist_thenErrorShouldBeThrown() {
+        UserAndPassword invalidCredentials = new UserAndPassword(UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+
+        InvalidCredentialsException actualException = assertThrows(
+                InvalidCredentialsException.class, () -> userService.deleteUser(invalidCredentials));
+        assertEquals("Invalid credentials", actualException.getMessage());
+    }
+
 }
