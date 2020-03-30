@@ -2,7 +2,7 @@ package com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.model.Token;
 import com.bncrypted.authenticator.model.TokenVerification;
-import com.bncrypted.authenticator.model.UserCredentials;
+import com.bncrypted.authenticator.model.UserAndOtp;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,9 +13,9 @@ class AuthServiceTest {
 
     @Test
     void whenLeaseIsCalledWithValidCredentials_thenReturnToken() {
-        UserCredentials userCredentials = new UserCredentials("test-user", "test-otp");
+        UserAndOtp userAndOtp = new UserAndOtp("test-user", "test-otp");
         Token expectedToken = new Token("token");
-        Token actualToken = authService.lease(userCredentials);
+        Token actualToken = authService.lease(userAndOtp);
 
         assertThat(actualToken).isEqualToComparingFieldByField(expectedToken);
     }

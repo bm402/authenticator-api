@@ -2,11 +2,11 @@ package com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.model.Token;
 import com.bncrypted.authenticator.model.TokenVerification;
-import com.bncrypted.authenticator.model.UserCredentials;
+import com.bncrypted.authenticator.model.UserAndOtp;
 
 public interface AuthService {
 
-    Token lease(UserCredentials userCredentials);
+    Token lease(UserAndOtp userAndOtp);
     Token leaseGuest();
     TokenVerification verify(Token token);
 
