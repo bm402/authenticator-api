@@ -6,8 +6,4 @@ public abstract class AuthenticatorException extends RuntimeException {
         super(message);
     }
 
-    public AuthenticatorException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
 }

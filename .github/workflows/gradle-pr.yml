@@ -34,7 +34,7 @@ jobs:
             const core = require('@actions/core')
             const prNumber = context.payload.number;
             core.exportVariable('PR_NUMBER', prNumber);
-      - name: Run scan
+      - name: Run Sonar scan
         run: gradle sonarqube -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.pullrequest.key=$PR_NUMBER
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
