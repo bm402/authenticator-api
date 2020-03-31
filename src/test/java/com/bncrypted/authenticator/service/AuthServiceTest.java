@@ -1,8 +1,8 @@
 package com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.model.Token;
-import com.bncrypted.authenticator.model.TokenVerification;
 import com.bncrypted.authenticator.model.UserAndOtp;
+import com.bncrypted.authenticator.model.UserResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,9 +31,9 @@ class AuthServiceTest {
     @Test
     void whenVerifyIsCalledWithValidToken_thenReturnUsername() {
         Token token = new Token("test-token");
-        TokenVerification expectedTokenVerification = new TokenVerification("verified");
-        TokenVerification actualTokenVerification = authService.verify(token);
+        UserResponse expectedUserResponse = new UserResponse("guest-user", "Verification successful");
+        UserResponse actualUserResponse = authService.verify(token);
 
-        assertThat(actualTokenVerification).isEqualToComparingFieldByField(expectedTokenVerification);
+        assertThat(actualUserResponse).isEqualToComparingFieldByField(expectedUserResponse);
     }
 }

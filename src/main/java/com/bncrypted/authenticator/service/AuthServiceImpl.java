@@ -1,8 +1,8 @@
 package com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.model.Token;
-import com.bncrypted.authenticator.model.TokenVerification;
 import com.bncrypted.authenticator.model.UserAndOtp;
+import com.bncrypted.authenticator.model.UserResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,8 +16,8 @@ public class AuthServiceImpl implements AuthService {
         return new Token("guest-token");
     }
 
-    public TokenVerification verify(Token token) {
-        return new TokenVerification("verified");
+    public UserResponse verify(Token token) {
+        return new UserResponse("guest-user", "Verification successful");
     }
 
 }

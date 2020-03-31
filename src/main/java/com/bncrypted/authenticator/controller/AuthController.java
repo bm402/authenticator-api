@@ -1,8 +1,8 @@
 package com.bncrypted.authenticator.controller;
 
 import com.bncrypted.authenticator.model.Token;
-import com.bncrypted.authenticator.model.TokenVerification;
 import com.bncrypted.authenticator.model.UserAndOtp;
+import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,9 +34,9 @@ public class AuthController {
     }
 
     @PostMapping(value = "/verify")
-    public ResponseEntity<TokenVerification> verify(@RequestBody @Valid Token token) {
-        TokenVerification tokenVerification = authService.verify(token);
-        return ResponseEntity.ok(tokenVerification);
+    public ResponseEntity<UserResponse> verify(@RequestBody @Valid Token token) {
+        UserResponse userResponse = authService.verify(token);
+        return ResponseEntity.ok(userResponse);
     }
 
 }
