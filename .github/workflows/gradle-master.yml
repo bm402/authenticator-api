@@ -1,4 +1,4 @@
-name: Master branch
+name: Authenticator API
 on:
   push:
     branches:
