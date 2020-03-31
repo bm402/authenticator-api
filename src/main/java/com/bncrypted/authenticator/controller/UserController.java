@@ -26,19 +26,19 @@ public class UserController {
     }
 
     @PostMapping
-    ResponseEntity<UserResponse> addUser(@RequestBody @Valid UserAndPassword userAndPassword) {
+    public ResponseEntity<UserResponse> addUser(@RequestBody @Valid UserAndPassword userAndPassword) {
         UserResponse userResponse = userService.addUser(userAndPassword);
         return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
     }
 
     @PutMapping
-    ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserAndNewPassword userAndNewPassword) {
+    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserAndNewPassword userAndNewPassword) {
         UserResponse userResponse = userService.updateUser(userAndNewPassword);
         return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }
 
     @DeleteMapping
-    ResponseEntity<UserResponse> deleteUser(@RequestBody @Valid UserAndPassword userAndPassword) {
+    public ResponseEntity<UserResponse> deleteUser(@RequestBody @Valid UserAndPassword userAndPassword) {
         UserResponse userResponse = userService.deleteUser(userAndPassword);
         return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }

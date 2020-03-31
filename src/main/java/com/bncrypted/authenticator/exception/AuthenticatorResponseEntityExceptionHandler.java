@@ -28,7 +28,7 @@ public class AuthenticatorResponseEntityExceptionHandler extends ResponseEntityE
 
     @ResponseBody
     @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class, RuntimeException.class })
-    public ResponseEntity<ErrorResponse> handleInternalServerErrors(RuntimeException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleInternalServerErrors(RuntimeException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR, getRootException(ex).getLocalizedMessage(), getCurrentTimestamp());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
