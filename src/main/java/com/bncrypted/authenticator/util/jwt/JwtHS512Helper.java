@@ -8,8 +8,6 @@ import java.util.Date;
 
 public class JwtHS512Helper implements JwtHelper {
 
-    private final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS512;
-
     private final String jwtKey;
     private final int ttlInSeconds;
     private final Clock clock;
@@ -24,7 +22,7 @@ public class JwtHS512Helper implements JwtHelper {
         return Jwts.builder()
                 .setSubject(username)
                 .setExpiration(Date.from(clock.instant().plusSeconds(ttlInSeconds)))
-                .signWith(SIGNATURE_ALGORITHM, jwtKey)
+                .signWith(SignatureAlgorithm.HS512, jwtKey)
                 .compact();
     }
 
