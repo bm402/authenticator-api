@@ -6,12 +6,14 @@ import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
 import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.repository.UserDao;
+import com.google.common.io.BaseEncoding;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -33,7 +35,9 @@ public class UserServiceImpl implements UserService {
         }
         UserAndHashedPassword userAndHashedPassword = encodePassword(
                 userAndPassword.getUsername(), userAndPassword.getPassword());
-        String returnedUsername = jdbi.withExtension(UserDao.class, dao -> dao.addUser(userAndHashedPassword));
+        String mfaKey = BaseEncoding.base32().encode(UUID.randomUUID().toString().getBytes());
+        String returnedUsername = jdbi.withExtension(
+                UserDao.class, dao -> dao.addUser(userAndHashedPassword, mfaKey));
         return new UserResponse(returnedUsername, "User profile created");
     }
 

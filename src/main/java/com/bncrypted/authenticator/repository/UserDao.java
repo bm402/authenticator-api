@@ -8,11 +8,11 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 public interface UserDao {
 
     @SqlQuery(
-            "INSERT INTO users (username, hashed_password) " +
-            "VALUES (:username, :hashedPassword) " +
+            "INSERT INTO users (username, hashed_password, mfa_key) " +
+            "VALUES (:username, :hashedPassword, :mfaKey) " +
             "RETURNING username"
     )
-    String addUser(@BindBean UserAndHashedPassword userAndHashedPassword);
+    String addUser(@BindBean UserAndHashedPassword userAndHashedPassword, String mfaKey);
 
     @SqlQuery(
             "UPDATE users " +
