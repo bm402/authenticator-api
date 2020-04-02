@@ -1,6 +1,6 @@
 package com.bncrypted.authenticator.controller;
 
-import com.bncrypted.authenticator.model.Token;
+import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.service.AuthService;
@@ -22,20 +22,20 @@ public class AuthController {
     }
 
     @PostMapping(value = "/lease")
-    public ResponseEntity<Token> lease(@RequestBody @Valid UserAndOtp userAndOtp) {
-        Token token = authService.lease(userAndOtp);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<TokenCredentials> lease(@RequestBody @Valid UserAndOtp userAndOtp) {
+        TokenCredentials tokenCredentials = authService.lease(userAndOtp);
+        return ResponseEntity.ok(tokenCredentials);
     }
 
     @GetMapping(value = "/lease/guest")
-    public ResponseEntity<Token> leaseGuest() {
-        Token token = authService.leaseGuest();
-        return ResponseEntity.ok(token);
+    public ResponseEntity<TokenCredentials> leaseGuest() {
+        TokenCredentials tokenCredentials = authService.leaseGuest();
+        return ResponseEntity.ok(tokenCredentials);
     }
 
     @PostMapping(value = "/verify")
-    public ResponseEntity<UserResponse> verify(@RequestBody @Valid Token token) {
-        UserResponse userResponse = authService.verify(token);
+    public ResponseEntity<UserResponse> verify(@RequestBody @Valid TokenCredentials tokenCredentials) {
+        UserResponse userResponse = authService.verify(tokenCredentials);
         return ResponseEntity.ok(userResponse);
     }
 

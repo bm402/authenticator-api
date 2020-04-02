@@ -1,7 +1,7 @@
 package com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
-import com.bncrypted.authenticator.model.Token;
+import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
 import com.bncrypted.authenticator.model.UserResponse;
@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
         this.jwtHelper = jwtHelper;
     }
 
-    public Token lease(UserAndOtp userAndOtp) {
+    public TokenCredentials lease(UserAndOtp userAndOtp) {
         UserCredentials storedCredentials = jdbi.withExtension(AuthDao.class,
                 dao -> dao.getUserCredentials(userAndOtp.getUsername()));
 
@@ -47,15 +47,16 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid one-time password");
         }
 
-        return new Token(jwtHelper.issueTokenForUser(userAndOtp.getUsername()));
+        return new TokenCredentials(jwtHelper.issueTokenForUser(userAndOtp.getUsername()));
     }
 
-    public Token leaseGuest() {
-        return new Token(jwtHelper.issueTokenForUser("guest"));
+    public TokenCredentials leaseGuest() {
+        return new TokenCredentials(jwtHelper.issueTokenForUser("guest"));
     }
 
-    public UserResponse verify(Token token) {
-        return new UserResponse("guest-user", "Verification successful");
+    public UserResponse verify(TokenCredentials tokenCredentials) {
+        String extractedUsername = jwtHelper.verifyAndExtractUser(tokenCredentials.getToken());
+        return new UserResponse(extractedUsername, "Verification successful");
     }
 
 }
