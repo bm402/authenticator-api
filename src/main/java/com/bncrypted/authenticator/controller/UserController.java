@@ -31,9 +31,15 @@ public class UserController {
         return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserAndNewPassword userAndNewPassword) {
-        UserResponse userResponse = userService.updateUser(userAndNewPassword);
+    @PutMapping("/password")
+    public ResponseEntity<UserResponse> updateUserPassword(@RequestBody @Valid UserAndNewPassword userAndNewPassword) {
+        UserResponse userResponse = userService.updateUserPassword(userAndNewPassword);
+        return new ResponseEntity<>(userResponse, HttpStatus.OK);
+    }
+
+    @PutMapping("/mfa-key")
+    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserAndPassword userAndPassword) {
+        UserResponse userResponse = userService.updateUserMfaKey(userAndPassword);
         return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }
 

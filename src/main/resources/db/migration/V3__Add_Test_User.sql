@@ -1,0 +1,2 @@
+INSERT INTO users (username, hashed_password, mfa_key)
+VALUES ('test', '$2a$10$sUiD6RWlwo4JxeFryt1m1um0ytJfsiW3Vh/uh08O6DHgi7IWoOvx.', 'GJQWGZJYMJQTSLJXGQ2WCLJUGI3DCLLCMQ4WGLJYGRSTCZJZGQ2DMZTDGQ======')
