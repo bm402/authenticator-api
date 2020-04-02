@@ -1,7 +1,6 @@
 package integration.com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
-import com.bncrypted.authenticator.model.UserAndHashedPassword;
 import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
 import com.bncrypted.authenticator.model.UserCredentials;

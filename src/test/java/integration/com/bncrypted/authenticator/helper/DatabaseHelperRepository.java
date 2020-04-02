@@ -1,6 +1,5 @@
 package integration.com.bncrypted.authenticator.helper;
 
-import com.bncrypted.authenticator.model.UserAndHashedPassword;
 import com.bncrypted.authenticator.model.UserCredentials;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
@@ -22,12 +21,5 @@ public interface DatabaseHelperRepository {
     )
     @RegisterConstructorMapper(UserCredentials.class)
     UserCredentials getUser(String username);
-
-    @SqlQuery(
-            "SELECT mfa_key " +
-            "FROM users " +
-            "WHERE username = :username"
-    )
-    String getMfaKeyForUser(String username);
 
 }

@@ -2,7 +2,6 @@ package integration.com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
 import com.bncrypted.authenticator.model.Token;
-import com.bncrypted.authenticator.model.UserAndHashedPassword;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
 import com.bncrypted.authenticator.service.AuthService;
@@ -78,4 +77,5 @@ public class AuthServiceTest extends IntegrationBaseTest {
 
         assertEquals("guest", jwtHelper.verifyAndExtractUser(actualToken.getToken()));
     }
+
 }
