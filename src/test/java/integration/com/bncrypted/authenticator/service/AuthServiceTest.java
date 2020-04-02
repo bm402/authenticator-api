@@ -1,6 +1,7 @@
 package integration.com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
+import com.bncrypted.authenticator.exception.InvalidTokenException;
 import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
@@ -13,8 +14,6 @@ import com.bncrypted.authenticator.util.otp.OtpHelper;
 import com.bncrypted.authenticator.util.otp.TotpHelper;
 import com.google.common.io.BaseEncoding;
 import integration.com.bncrypted.authenticator.base.IntegrationBaseTest;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -98,7 +97,10 @@ public class AuthServiceTest extends IntegrationBaseTest {
     void whenVerifyingMalformedToken_thenUsernameShouldNotBeReturned() {
         TokenCredentials invalidTokenCredentials = new TokenCredentials("malformed-token");
 
-        assertThrows(MalformedJwtException.class, () -> authService.verify(invalidTokenCredentials));
+        InvalidTokenException actualException = assertThrows(InvalidTokenException.class,
+                () -> authService.verify(invalidTokenCredentials));
+
+        assertEquals("Invalid token", actualException.getMessage());
     }
 
     @Test
@@ -108,7 +110,10 @@ public class AuthServiceTest extends IntegrationBaseTest {
         TokenCredentials validTokenCredentials = authService.lease(validCredentials);
         TokenCredentials invalidTokenCredentials = new TokenCredentials(validTokenCredentials.getToken() + "invalid");
 
-        assertThrows(SignatureException.class, () -> authService.verify(invalidTokenCredentials));
+        InvalidTokenException actualException = assertThrows(InvalidTokenException.class,
+                () -> authService.verify(invalidTokenCredentials));
+
+        assertEquals("Invalid token", actualException.getMessage());
     }
 
 }

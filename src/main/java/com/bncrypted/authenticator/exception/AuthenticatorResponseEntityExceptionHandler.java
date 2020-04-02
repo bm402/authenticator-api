@@ -26,6 +26,14 @@ public class AuthenticatorResponseEntityExceptionHandler extends ResponseEntityE
     }
 
     @ResponseBody
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED, ex.getLocalizedMessage(), getCurrentTimestamp());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ResponseBody
     @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class, RuntimeException.class })
     public ResponseEntity<ErrorResponse> handleInternalServerErrors(RuntimeException ex) {
         ErrorResponse errorResponse = new ErrorResponse(

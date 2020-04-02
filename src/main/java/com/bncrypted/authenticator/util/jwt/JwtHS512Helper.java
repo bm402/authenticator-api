@@ -1,5 +1,7 @@
 package com.bncrypted.authenticator.util.jwt;
 
+import com.bncrypted.authenticator.exception.InvalidTokenException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -39,12 +41,16 @@ public class JwtHS512Helper implements JwtHelper {
     }
 
     public String verifyAndExtractUser(String jwt) {
-        return Jwts.parser()
-                .setClock(() -> Date.from(clock.instant()))
-                .setSigningKey(key)
-                .parseClaimsJws(jwt)
-                .getBody()
-                .getSubject();
+        try {
+            return Jwts.parser()
+                    .setClock(() -> Date.from(clock.instant()))
+                    .setSigningKey(key)
+                    .parseClaimsJws(jwt)
+                    .getBody()
+                    .getSubject();
+        } catch (JwtException ex) {
+            throw new InvalidTokenException();
+        }
     }
 
 }
