@@ -1,6 +1,5 @@
 package com.bncrypted.authenticator.repository;
 
-import com.bncrypted.authenticator.model.UserAndHashedPassword;
 import com.bncrypted.authenticator.model.UserCredentials;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;

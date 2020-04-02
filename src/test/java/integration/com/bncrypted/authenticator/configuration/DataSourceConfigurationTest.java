@@ -13,7 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@EnableConfigurationProperties()
+@EnableConfigurationProperties
 @ContextConfiguration(classes = DataSourceConfiguration.class)
 @TestPropertySource("classpath:test.properties")
 public class DataSourceConfigurationTest {
