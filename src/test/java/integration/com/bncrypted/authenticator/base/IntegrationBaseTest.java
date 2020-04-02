@@ -18,7 +18,7 @@ public abstract class IntegrationBaseTest {
 
     protected static final DatabaseHelperRepository databaseHelper;
     protected static final PasswordEncoder passwordEncoder;
-    private static final PGSimpleDataSource dataSource;
+    protected static final PGSimpleDataSource dataSource;
 
     static {
         PostgreSQLContainer db = createDatabaseContainer();
@@ -51,15 +51,6 @@ public abstract class IntegrationBaseTest {
         configuration.locations("filesystem:src/main/resources/db/migration");
         Flyway flyway = new Flyway(configuration);
         flyway.migrate();
-    }
-
-    protected static <T> T initService(Class<T> serviceClass) {
-        try {
-            Constructor<T> constructor = serviceClass.getConstructor(DataSource.class, PasswordEncoder.class);
-            return constructor.newInstance(dataSource, passwordEncoder);
-        } catch (Exception e) {
-            throw new RuntimeException("Cannot instantiate service " + serviceClass.getSimpleName(), e);
-        }
     }
 
 }

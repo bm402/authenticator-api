@@ -6,13 +6,10 @@ import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
 import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.repository.AuthDao;
-import com.bncrypted.authenticator.util.jwt.JwtHS512Helper;
 import com.bncrypted.authenticator.util.jwt.JwtHelper;
 import com.bncrypted.authenticator.util.otp.OtpHelper;
-import com.bncrypted.authenticator.util.otp.TotpHelper;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,21 +20,19 @@ public class AuthServiceImpl implements AuthService {
 
     private final Jdbi jdbi;
     private final PasswordEncoder passwordEncoder;
-
-    private final JwtHelper jwtHelper;
     private final OtpHelper otpHelper;
+    private final JwtHelper jwtHelper;
 
     public AuthServiceImpl(DataSource dataSource,
                            PasswordEncoder passwordEncoder,
-                           @Value("${jwt.key}") String jwtKey,
-                           @Value("${jwt.ttl}") int ttlInSeconds) {
+                           OtpHelper otpHelper,
+                           JwtHelper jwtHelper) {
 
         this.jdbi = Jdbi.create(dataSource)
                 .installPlugin(new SqlObjectPlugin());
         this.passwordEncoder = passwordEncoder;
-
-        this.jwtHelper = new JwtHS512Helper(jwtKey, ttlInSeconds);
-        this.otpHelper = new TotpHelper();
+        this.otpHelper = otpHelper;
+        this.jwtHelper = jwtHelper;
     }
 
     public Token lease(UserAndOtp userAndOtp) {

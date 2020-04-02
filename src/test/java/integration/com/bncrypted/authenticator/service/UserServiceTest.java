@@ -4,9 +4,11 @@ import com.bncrypted.authenticator.exception.InvalidCredentialsException;
 import com.bncrypted.authenticator.model.UserAndHashedPassword;
 import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
+import com.bncrypted.authenticator.model.UserCredentials;
 import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.service.UserService;
 import com.bncrypted.authenticator.service.UserServiceImpl;
+import com.google.common.io.BaseEncoding;
 import integration.com.bncrypted.authenticator.base.IntegrationBaseTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,17 +25,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserServiceTest extends IntegrationBaseTest {
 
-    private static final UserService userService = initService(UserServiceImpl.class);
+    private final UserService userService = new UserServiceImpl(dataSource, passwordEncoder);
     private String username;
     private String existingPassword;
-    private UserAndHashedPassword existingCredentials;
+    private String existingMfaKey;
+    private UserCredentials existingUserCredentials;
 
     @BeforeEach
     void setup() {
         username = UUID.randomUUID().toString();
         existingPassword = UUID.randomUUID().toString();
-        existingCredentials = new UserAndHashedPassword(username, passwordEncoder.encode(existingPassword));
-        databaseHelper.addUser(existingCredentials);
+        existingMfaKey = BaseEncoding.base32().encode(UUID.randomUUID().toString().getBytes());
+        existingUserCredentials = new UserCredentials(username,
+                passwordEncoder.encode(existingPassword), existingMfaKey);
+        databaseHelper.addUser(existingUserCredentials);
     }
 
     @Test
@@ -44,9 +50,9 @@ public class UserServiceTest extends IntegrationBaseTest {
         UserResponse actualResponse = userService.addUser(newCredentials);
         assertThat(actualResponse).isEqualToComparingFieldByField(expectedResponse);
 
-        UserAndHashedPassword credentialsFromDb = databaseHelper.getUser(newUsername);
-        assertNotNull(credentialsFromDb);
-        assertEquals(newUsername, credentialsFromDb.getUsername());
+        UserCredentials storedUserCredentials = databaseHelper.getUser(newUsername);
+        assertNotNull(storedUserCredentials);
+        assertEquals(newUsername, storedUserCredentials.getUsername());
     }
 
     @Test
@@ -57,8 +63,8 @@ public class UserServiceTest extends IntegrationBaseTest {
                 InvalidCredentialsException.class, () -> userService.addUser(newCredentials));
         assertEquals("Username already taken", actualException.getMessage());
 
-        UserAndHashedPassword credentialsFromDb = databaseHelper.getUser(username);
-        assertThat(credentialsFromDb).isEqualToComparingFieldByField(existingCredentials);
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertThat(storedUserCredentials).isEqualToComparingFieldByField(existingUserCredentials);
     }
 
     @Test
@@ -66,27 +72,53 @@ public class UserServiceTest extends IntegrationBaseTest {
         String newPassword = UUID.randomUUID().toString();
         UserAndNewPassword newCredentials = new UserAndNewPassword(username, existingPassword, newPassword);
 
-        UserResponse expectedResponse = new UserResponse(username, "User profile updated");
-        UserResponse actualResponse = userService.updateUser(newCredentials);
+        UserResponse expectedResponse = new UserResponse(username, "User password updated");
+        UserResponse actualResponse = userService.updateUserPassword(newCredentials);
         assertThat(actualResponse).isEqualToComparingFieldByField(expectedResponse);
 
-        UserAndHashedPassword credentialsFromDb = databaseHelper.getUser(username);
-        assertNotNull(credentialsFromDb);
-        assertTrue(passwordEncoder.matches(newPassword, credentialsFromDb.getHashedPassword()));
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertNotNull(storedUserCredentials);
+        assertTrue(passwordEncoder.matches(newPassword, storedUserCredentials.getHashedPassword()));
     }
 
     @Test
     void whenUpdatingUserPasswordWithInvalidOldPassword_thenPasswordShouldNotBeUpdated() {
-        UserAndNewPassword newCredentials = new UserAndNewPassword(username, UUID.randomUUID().toString(),
+        UserAndNewPassword invalidCredentials = new UserAndNewPassword(username, UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
 
         InvalidCredentialsException actualException = assertThrows(
-                InvalidCredentialsException.class, () -> userService.updateUser(newCredentials));
+                InvalidCredentialsException.class, () -> userService.updateUserPassword(invalidCredentials));
         assertEquals("Invalid credentials", actualException.getMessage());
 
-        UserAndHashedPassword credentialsFromDb = databaseHelper.getUser(username);
-        assertNotNull(credentialsFromDb);
-        assertTrue(passwordEncoder.matches(existingPassword, credentialsFromDb.getHashedPassword()));
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertNotNull(storedUserCredentials);
+        assertTrue(passwordEncoder.matches(existingPassword, storedUserCredentials.getHashedPassword()));
+    }
+
+    @Test
+    void whenUpdatingUserMfaKeyWithValidPassword_thenMfaKeyShouldBeRegenerated() {
+        UserAndPassword validCredentials = new UserAndPassword(username, existingPassword);
+
+        UserResponse expectedResponse = new UserResponse(username, "User MFA key updated");
+        UserResponse actualResponse = userService.updateUserMfaKey(validCredentials);
+        assertThat(actualResponse).isEqualToComparingFieldByField(expectedResponse);
+
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertNotNull(storedUserCredentials);
+        assertNotEquals(existingMfaKey, storedUserCredentials.getMfaKey());
+    }
+
+    @Test
+    void whenUpdatingUserMfaKeyWithInvalidPassword_thenMfaKeyShouldNotBeRegenerated() {
+        UserAndPassword invalidCredentials = new UserAndPassword(username, UUID.randomUUID().toString());
+
+        InvalidCredentialsException actualException = assertThrows(
+                InvalidCredentialsException.class, () -> userService.updateUserMfaKey(invalidCredentials));
+        assertEquals("Invalid credentials", actualException.getMessage());
+
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertNotNull(storedUserCredentials);
+        assertEquals(existingMfaKey, storedUserCredentials.getMfaKey());
     }
 
     @Test
@@ -97,8 +129,8 @@ public class UserServiceTest extends IntegrationBaseTest {
         UserResponse actualResponse = userService.deleteUser(validCredentials);
         assertThat(actualResponse).isEqualToComparingFieldByField(expectedResponse);
 
-        UserAndHashedPassword credentialsFromDb = databaseHelper.getUser(username);
-        assertNull(credentialsFromDb);
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertNull(storedUserCredentials);
     }
 
     @Test
@@ -109,8 +141,8 @@ public class UserServiceTest extends IntegrationBaseTest {
                 InvalidCredentialsException.class, () -> userService.deleteUser(invalidCredentials));
         assertEquals("Invalid credentials", actualException.getMessage());
 
-        UserAndHashedPassword credentialsFromDb = databaseHelper.getUser(username);
-        assertNotNull(credentialsFromDb);
+        UserCredentials storedUserCredentials = databaseHelper.getUser(username);
+        assertNotNull(storedUserCredentials);
     }
 
     @Test
