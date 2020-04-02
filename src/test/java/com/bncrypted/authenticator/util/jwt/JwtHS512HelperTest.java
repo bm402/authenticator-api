@@ -1,7 +1,6 @@
 package com.bncrypted.authenticator.util.jwt;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.SignatureException;
+import com.bncrypted.authenticator.exception.InvalidTokenException;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -22,22 +21,22 @@ public class JwtHS512HelperTest {
 
     @Test
     void shouldVerifyAndExtractUsernameForValidToken() {
-        String token = jwtHelper.issueTokenForUser(TEST_USER);
-        assertEquals(TEST_USER, jwtHelper.verifyAndExtractUser(token));
+        String validToken = jwtHelper.issueTokenForUser(TEST_USER);
+        assertEquals(TEST_USER, jwtHelper.verifyAndExtractUser(validToken));
     }
 
     @Test
     void shouldNotVerifyExpiredToken() throws InterruptedException {
-        String token = jwtHelper.issueTokenForUser(TEST_USER);
+        String expiredToken = jwtHelper.issueTokenForUser(TEST_USER);
         TimeUnit.SECONDS.sleep(5);
-        assertThrows(ExpiredJwtException.class, () -> jwtHelper.verifyAndExtractUser(token));
+        assertThrows(InvalidTokenException.class, () -> jwtHelper.verifyAndExtractUser(expiredToken));
     }
 
     @Test
     void shouldNotVerifyInvalidToken() {
         String validToken = jwtHelper.issueTokenForUser(TEST_USER);
         String invalidToken = validToken + "invalid";
-        assertThrows(SignatureException.class, () -> jwtHelper.verifyAndExtractUser(invalidToken));
+        assertThrows(InvalidTokenException.class, () -> jwtHelper.verifyAndExtractUser(invalidToken));
     }
 
 }

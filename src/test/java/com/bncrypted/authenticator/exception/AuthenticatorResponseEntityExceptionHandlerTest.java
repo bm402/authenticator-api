@@ -24,6 +24,17 @@ public class AuthenticatorResponseEntityExceptionHandlerTest {
     }
 
     @Test
+    void invalidTokenExceptionShouldReturnInvalidTokenMessage() {
+        InvalidTokenException ex = new InvalidTokenException();
+
+        ErrorResponse expectedErrorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Invalid token", "timestamp");
+        ErrorResponse actualErrorResponse = handler.handleInvalidTokenException(ex).getBody();
+
+        assertErrorResponse(expectedErrorResponse, actualErrorResponse);
+    }
+
+    @Test
     void internalServerErrorShouldReturnInternalServerErrorMessage() {
         RuntimeException ex = new RuntimeException("Internal error");
 

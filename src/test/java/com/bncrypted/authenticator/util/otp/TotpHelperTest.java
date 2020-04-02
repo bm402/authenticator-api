@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,10 +18,7 @@ public class TotpHelperTest {
     void shouldIssueTotpWithValidBase32EncodedKey() {
         String totp = otpHelper.issueOtp(VALID_TOTP_KEY);
         assertNotNull(totp);
-        assertAll("totp",
-                () -> assertEquals(6, totp.length(), "should be 6 characters long"),
-                () -> assertTrue(Pattern.compile("[0-9]").matcher(totp).find(), "should only contain digits 0-9")
-        );
+        assertTrue(Pattern.compile("[0-9]").matcher(totp).find(), "totp should only contain digits 0-9");
     }
 
     @Test
