@@ -1,9 +1,10 @@
 package integration.com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
-import com.bncrypted.authenticator.model.Token;
+import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
+import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.service.AuthService;
 import com.bncrypted.authenticator.service.AuthServiceImpl;
 import com.bncrypted.authenticator.util.jwt.JwtHS512Helper;
@@ -12,11 +13,14 @@ import com.bncrypted.authenticator.util.otp.OtpHelper;
 import com.bncrypted.authenticator.util.otp.TotpHelper;
 import com.google.common.io.BaseEncoding;
 import integration.com.bncrypted.authenticator.base.IntegrationBaseTest;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -44,9 +48,9 @@ public class AuthServiceTest extends IntegrationBaseTest {
     void whenLeasingTokenWithValidCredentials_thenValidTokenShouldBeReturned() {
         String validOtp = otpHelper.issueOtp(existingMfaKey);
         UserAndOtp validCredentials = new UserAndOtp(username, existingPassword, validOtp);
-        Token actualToken = authService.lease(validCredentials);
+        TokenCredentials actualTokenCredentials = authService.lease(validCredentials);
 
-        assertEquals(username, jwtHelper.verifyAndExtractUser(actualToken.getToken()));
+        assertEquals(username, jwtHelper.verifyAndExtractUser(actualTokenCredentials.getToken()));
     }
 
     @Test
@@ -73,9 +77,38 @@ public class AuthServiceTest extends IntegrationBaseTest {
 
     @Test
     void whenLeasingTokenAsGuest_thenGuestTokenShouldBeReturned() {
-        Token actualToken = authService.leaseGuest();
+        TokenCredentials actualTokenCredentials = authService.leaseGuest();
 
-        assertEquals("guest", jwtHelper.verifyAndExtractUser(actualToken.getToken()));
+        assertEquals("guest", jwtHelper.verifyAndExtractUser(actualTokenCredentials.getToken()));
+    }
+
+    @Test
+    void whenVerifyingValidToken_thenUsernameShouldBeReturned() {
+        String validOtp = otpHelper.issueOtp(existingMfaKey);
+        UserAndOtp validCredentials = new UserAndOtp(username, existingPassword, validOtp);
+        TokenCredentials validTokenCredentials = authService.lease(validCredentials);
+
+        UserResponse expectedUserResponse = new UserResponse(username, "Verification successful");
+        UserResponse actualUserResponse = authService.verify(validTokenCredentials);
+
+        assertThat(actualUserResponse).isEqualToComparingFieldByField(expectedUserResponse);
+    }
+
+    @Test
+    void whenVerifyingMalformedToken_thenUsernameShouldNotBeReturned() {
+        TokenCredentials invalidTokenCredentials = new TokenCredentials("malformed-token");
+
+        assertThrows(MalformedJwtException.class, () -> authService.verify(invalidTokenCredentials));
+    }
+
+    @Test
+    void whenVerifyingInvalidToken_thenUsernameShouldNotBeReturned() {
+        String validOtp = otpHelper.issueOtp(existingMfaKey);
+        UserAndOtp validCredentials = new UserAndOtp(username, existingPassword, validOtp);
+        TokenCredentials validTokenCredentials = authService.lease(validCredentials);
+        TokenCredentials invalidTokenCredentials = new TokenCredentials(validTokenCredentials.getToken() + "invalid");
+
+        assertThrows(SignatureException.class, () -> authService.verify(invalidTokenCredentials));
     }
 
 }
