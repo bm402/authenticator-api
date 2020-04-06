@@ -1,42 +1,52 @@
 package com.bncrypted.authenticator.util.jwt;
 
 import com.bncrypted.authenticator.exception.InvalidTokenException;
+import com.bncrypted.authenticator.model.UserTokenDetails;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JwtHS512HelperTest {
 
-    private static final String TEST_USER = "test-user";
-    private final JwtHelper jwtHelper = new JwtHS512Helper("YWFh", 3);
+    private static final UserTokenDetails TEST_USER_TOKEN_DETAILS =
+            new UserTokenDetails("test-user", ImmutableSet.of("test-role"));
+
+    private final JwtHelper<UserTokenDetails> jwtHelper = new JwtHS512Helper<>("YWFh", 3);
 
     @Test
     void shouldIssueTokenForUser() {
-        assertNotNull(jwtHelper.issueTokenForUser(TEST_USER));
+        assertNotNull(jwtHelper.issueTokenForSubject(TEST_USER_TOKEN_DETAILS));
     }
 
     @Test
-    void shouldVerifyAndExtractUsernameForValidToken() {
-        String validToken = jwtHelper.issueTokenForUser(TEST_USER);
-        assertEquals(TEST_USER, jwtHelper.verifyAndExtractUser(validToken));
+    void shouldVerifyAndExtractUserTokenDetailsForValidToken() {
+        String validToken = jwtHelper.issueTokenForSubject(TEST_USER_TOKEN_DETAILS);
+        UserTokenDetails actualUserTokenDetails = jwtHelper.verifyAndExtractSubject(validToken, UserTokenDetails.class);
+
+        assertThat(actualUserTokenDetails).isEqualToComparingFieldByField(TEST_USER_TOKEN_DETAILS);
     }
 
     @Test
     void shouldNotVerifyExpiredToken() throws InterruptedException {
-        String expiredToken = jwtHelper.issueTokenForUser(TEST_USER);
+        String expiredToken = jwtHelper.issueTokenForSubject(TEST_USER_TOKEN_DETAILS);
         TimeUnit.SECONDS.sleep(5);
-        assertThrows(InvalidTokenException.class, () -> jwtHelper.verifyAndExtractUser(expiredToken));
+
+        assertThrows(InvalidTokenException.class,
+                () -> jwtHelper.verifyAndExtractSubject(expiredToken, UserTokenDetails.class));
     }
 
     @Test
     void shouldNotVerifyInvalidToken() {
-        String validToken = jwtHelper.issueTokenForUser(TEST_USER);
+        String validToken = jwtHelper.issueTokenForSubject(TEST_USER_TOKEN_DETAILS);
         String invalidToken = validToken + "invalid";
-        assertThrows(InvalidTokenException.class, () -> jwtHelper.verifyAndExtractUser(invalidToken));
+
+        assertThrows(InvalidTokenException.class,
+                () -> jwtHelper.verifyAndExtractSubject(invalidToken, UserTokenDetails.class));
     }
 
 }

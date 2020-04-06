@@ -4,16 +4,19 @@ import com.bncrypted.authenticator.exception.InvalidCredentialsException;
 import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
-import com.bncrypted.authenticator.model.UserResponse;
+import com.bncrypted.authenticator.model.UserTokenDetails;
 import com.bncrypted.authenticator.repository.AuthDao;
+import com.bncrypted.authenticator.repository.RoleDao;
 import com.bncrypted.authenticator.util.jwt.JwtHelper;
 import com.bncrypted.authenticator.util.otp.OtpHelper;
+import com.google.common.collect.ImmutableSet;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.util.Set;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -21,12 +24,12 @@ public class AuthServiceImpl implements AuthService {
     private final Jdbi jdbi;
     private final PasswordEncoder passwordEncoder;
     private final OtpHelper otpHelper;
-    private final JwtHelper jwtHelper;
+    private final JwtHelper<UserTokenDetails> jwtHelper;
 
     public AuthServiceImpl(DataSource dataSource,
                            PasswordEncoder passwordEncoder,
                            OtpHelper otpHelper,
-                           JwtHelper jwtHelper) {
+                           JwtHelper<UserTokenDetails> jwtHelper) {
 
         this.jdbi = Jdbi.create(dataSource)
                 .installPlugin(new SqlObjectPlugin());
@@ -47,16 +50,19 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid one-time password");
         }
 
-        return new TokenCredentials(jwtHelper.issueTokenForUser(userAndOtp.getUsername()));
+        Set<String> userRoles = jdbi.withExtension(RoleDao.class, dao -> dao.getUserRoles(userAndOtp.getUsername()));
+        UserTokenDetails userTokenDetails = new UserTokenDetails(userAndOtp.getUsername(), userRoles);
+
+        return new TokenCredentials(jwtHelper.issueTokenForSubject(userTokenDetails));
     }
 
     public TokenCredentials leaseGuest() {
-        return new TokenCredentials(jwtHelper.issueTokenForUser("guest"));
+        UserTokenDetails guestTokenDetails = new UserTokenDetails("guest", ImmutableSet.of("guest"));
+        return new TokenCredentials(jwtHelper.issueTokenForSubject(guestTokenDetails));
     }
 
-    public UserResponse verify(TokenCredentials tokenCredentials) {
-        String extractedUsername = jwtHelper.verifyAndExtractUser(tokenCredentials.getToken());
-        return new UserResponse(extractedUsername, "Verification successful");
+    public UserTokenDetails verify(TokenCredentials tokenCredentials) {
+        return jwtHelper.verifyAndExtractSubject(tokenCredentials.getToken(), UserTokenDetails.class);
     }
 
 }

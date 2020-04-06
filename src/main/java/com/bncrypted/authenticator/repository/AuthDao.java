@@ -7,7 +7,7 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 public interface AuthDao {
 
     @SqlQuery(
-            "SELECT username, hashed_password AS hashedPassword, mfa_key AS mfaKey " +
+            "SELECT id, username, hashed_password AS hashedPassword, mfa_key AS mfaKey " +
             "FROM users " +
             "WHERE username = :username"
     )

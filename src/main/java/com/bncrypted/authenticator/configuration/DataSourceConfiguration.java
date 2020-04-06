@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 public class DataSourceConfiguration {
 
     @Bean
-    @ConfigurationProperties("datasource.postgres")
+    @ConfigurationProperties("authenticator.api.datasource.postgres")
     public DataSource getPostgresDataSource() {
         return new PGSimpleDataSource();
     }

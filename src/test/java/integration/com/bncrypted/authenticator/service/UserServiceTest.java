@@ -37,7 +37,7 @@ public class UserServiceTest extends IntegrationBaseTest {
         existingMfaKey = BaseEncoding.base32().encode(UUID.randomUUID().toString().getBytes());
         existingUserCredentials = new UserCredentials(username,
                 passwordEncoder.encode(existingPassword), existingMfaKey);
-        databaseHelper.addUser(existingUserCredentials);
+        existingUserCredentials = databaseHelper.addUser(existingUserCredentials);
     }
 
     @Test

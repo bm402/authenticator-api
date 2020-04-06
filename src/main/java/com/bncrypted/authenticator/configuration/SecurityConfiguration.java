@@ -1,5 +1,6 @@
 package com.bncrypted.authenticator.configuration;
 
+import com.bncrypted.authenticator.model.UserTokenDetails;
 import com.bncrypted.authenticator.util.jwt.JwtHS512Helper;
 import com.bncrypted.authenticator.util.jwt.JwtHelper;
 import com.bncrypted.authenticator.util.otp.OtpHelper;
@@ -24,9 +25,9 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @ConfigurationProperties("jwt")
+    @ConfigurationProperties("authenticator.api.jwt")
     public JwtHelper getJwtHelper() {
-        return new JwtHS512Helper();
+        return new JwtHS512Helper<UserTokenDetails>();
     }
 
 }

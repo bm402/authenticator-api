@@ -1,8 +1,8 @@
 package com.bncrypted.authenticator.util.jwt;
 
-public interface JwtHelper {
+public interface JwtHelper<T> {
 
-    String issueTokenForUser(String username);
-    String verifyAndExtractUser(String jwt);
+    String issueTokenForSubject(T tokenDetails);
+    T verifyAndExtractSubject(String token, Class<T> tokenDetailsClass);
 
 }
