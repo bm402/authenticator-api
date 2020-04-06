@@ -1,4 +1,4 @@
-name: Pull request branch
+name: pr
 on:
   pull_request:
     branches:
