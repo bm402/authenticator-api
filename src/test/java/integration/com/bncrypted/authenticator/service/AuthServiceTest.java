@@ -5,7 +5,7 @@ import com.bncrypted.authenticator.exception.InvalidTokenException;
 import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
 import com.bncrypted.authenticator.model.UserCredentials;
-import com.bncrypted.authenticator.model.UserResponse;
+import com.bncrypted.authenticator.model.UserTokenDetails;
 import com.bncrypted.authenticator.service.AuthService;
 import com.bncrypted.authenticator.service.AuthServiceImpl;
 import com.bncrypted.authenticator.util.jwt.JwtHS512Helper;
@@ -16,6 +16,7 @@ import com.google.common.io.BaseEncoding;
 import integration.com.bncrypted.authenticator.base.IntegrationBaseTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import java.util.UUID;
 
@@ -26,21 +27,25 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class AuthServiceTest extends IntegrationBaseTest {
 
     private final OtpHelper otpHelper = new TotpHelper();
-    private final JwtHelper jwtHelper = new JwtHS512Helper("YWFh", 20);
+    private final JwtHelper<UserTokenDetails> jwtHelper = new JwtHS512Helper<>("YWFh", 20);
     private final AuthService authService = new AuthServiceImpl(dataSource, passwordEncoder, otpHelper, jwtHelper);
 
     private String username;
     private String existingPassword;
     private String existingMfaKey;
+    private String existingRole;
 
     @BeforeEach
     void setup() {
         username = UUID.randomUUID().toString();
         existingPassword = UUID.randomUUID().toString();
         existingMfaKey = BaseEncoding.base32().encode(UUID.randomUUID().toString().getBytes());
+        existingRole = UUID.randomUUID().toString();
         UserCredentials existingUserCredentials = new UserCredentials(username,
                 passwordEncoder.encode(existingPassword), existingMfaKey);
+
         databaseHelper.addUser(existingUserCredentials);
+        databaseHelper.addUserRole(username, existingRole);
     }
 
     @Test
@@ -49,7 +54,11 @@ public class AuthServiceTest extends IntegrationBaseTest {
         UserAndOtp validCredentials = new UserAndOtp(username, existingPassword, validOtp);
         TokenCredentials actualTokenCredentials = authService.lease(validCredentials);
 
-        assertEquals(username, jwtHelper.verifyAndExtractUser(actualTokenCredentials.getToken()));
+        UserTokenDetails expectedUserTokenDetails = new UserTokenDetails(username, ImmutableSet.of(existingRole));
+        UserTokenDetails actualUserTokenDetails = jwtHelper.verifyAndExtractSubject(
+                actualTokenCredentials.getToken(), UserTokenDetails.class);
+
+        assertThat(actualUserTokenDetails).isEqualToComparingFieldByField(expectedUserTokenDetails);
     }
 
     @Test
@@ -75,26 +84,30 @@ public class AuthServiceTest extends IntegrationBaseTest {
     }
 
     @Test
-    void whenLeasingTokenAsGuest_thenGuestTokenShouldBeReturned() {
+    void whenLeasingTokenAsGuest_thenValidGuestTokenShouldBeReturned() {
         TokenCredentials actualTokenCredentials = authService.leaseGuest();
 
-        assertEquals("guest", jwtHelper.verifyAndExtractUser(actualTokenCredentials.getToken()));
+        UserTokenDetails expectedUserTokenDetails = new UserTokenDetails("guest", ImmutableSet.of("guest"));
+        UserTokenDetails actualUserTokenDetails = jwtHelper.verifyAndExtractSubject(
+                actualTokenCredentials.getToken(), UserTokenDetails.class);
+
+        assertThat(actualUserTokenDetails).isEqualToComparingFieldByField(expectedUserTokenDetails);
     }
 
     @Test
-    void whenVerifyingValidToken_thenUsernameShouldBeReturned() {
+    void whenVerifyingValidToken_thenUserTokenDetailsShouldBeReturned() {
         String validOtp = otpHelper.issueOtp(existingMfaKey);
         UserAndOtp validCredentials = new UserAndOtp(username, existingPassword, validOtp);
         TokenCredentials validTokenCredentials = authService.lease(validCredentials);
 
-        UserResponse expectedUserResponse = new UserResponse(username, "Verification successful");
-        UserResponse actualUserResponse = authService.verify(validTokenCredentials);
+        UserTokenDetails expectedUserTokenDetails = new UserTokenDetails(username, ImmutableSet.of(existingRole));
+        UserTokenDetails actualUserTokenDetails = authService.verify(validTokenCredentials);
 
-        assertThat(actualUserResponse).isEqualToComparingFieldByField(expectedUserResponse);
+        assertThat(actualUserTokenDetails).isEqualToComparingFieldByField(expectedUserTokenDetails);
     }
 
     @Test
-    void whenVerifyingMalformedToken_thenUsernameShouldNotBeReturned() {
+    void whenVerifyingMalformedToken_thenUserTokenDetailsShouldNotBeReturned() {
         TokenCredentials invalidTokenCredentials = new TokenCredentials("malformed-token");
 
         InvalidTokenException actualException = assertThrows(InvalidTokenException.class,
@@ -104,7 +117,7 @@ public class AuthServiceTest extends IntegrationBaseTest {
     }
 
     @Test
-    void whenVerifyingInvalidToken_thenUsernameShouldNotBeReturned() {
+    void whenVerifyingInvalidToken_thenUserTokenDetailsShouldNotBeReturned() {
         String validOtp = otpHelper.issueOtp(existingMfaKey);
         UserAndOtp validCredentials = new UserAndOtp(username, existingPassword, validOtp);
         TokenCredentials validTokenCredentials = authService.lease(validCredentials);

@@ -1,8 +1,11 @@
 package integration.com.bncrypted.authenticator.configuration;
 
 import com.bncrypted.authenticator.configuration.SecurityConfiguration;
+import com.bncrypted.authenticator.model.TokenDetails;
+import com.bncrypted.authenticator.model.UserTokenDetails;
 import com.bncrypted.authenticator.util.jwt.JwtHelper;
 import com.bncrypted.authenticator.util.otp.OtpHelper;
+import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SpringExtension.class)
@@ -42,9 +45,11 @@ public class SecurityConfigurationTest {
 
     @Test
     void jwtHelperShouldBeConfigured() {
-        JwtHelper jwtHelper = securityConfiguration.getJwtHelper();
-        String token = jwtHelper.issueTokenForUser("test-user");
+        JwtHelper<UserTokenDetails> jwtHelper = securityConfiguration.getJwtHelper();
+        UserTokenDetails expectedUserTokenDetails = new UserTokenDetails("test-user", ImmutableSet.of("test-role"));
+        String token = jwtHelper.issueTokenForSubject(expectedUserTokenDetails);
+        UserTokenDetails actualUserTokenDetails = jwtHelper.verifyAndExtractSubject(token, UserTokenDetails.class);
 
-        assertEquals("test-user", jwtHelper.verifyAndExtractUser(token));
+        assertThat(actualUserTokenDetails).isEqualToComparingFieldByField(expectedUserTokenDetails);
     }
 }

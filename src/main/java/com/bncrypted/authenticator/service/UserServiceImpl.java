@@ -5,6 +5,7 @@ import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
 import com.bncrypted.authenticator.model.UserCredentials;
 import com.bncrypted.authenticator.model.UserResponse;
+import com.bncrypted.authenticator.repository.RoleDao;
 import com.bncrypted.authenticator.repository.UserDao;
 import com.google.common.io.BaseEncoding;
 import org.jdbi.v3.core.Jdbi;
@@ -34,8 +35,12 @@ public class UserServiceImpl implements UserService {
         }
         UserCredentials newUserCredentials = createUserCredentials(userAndPassword.getUsername(),
                 userAndPassword.getPassword());
-        String returnedUsername = jdbi.withExtension(UserDao.class, dao -> dao.addUser(newUserCredentials));
-        return new UserResponse(returnedUsername, "User profile created");
+
+        UserCredentials newStoredUserCredentials =
+                jdbi.withExtension(UserDao.class, dao -> dao.addUser(newUserCredentials));
+        jdbi.useExtension(RoleDao.class, dao -> dao.addUserRole(newStoredUserCredentials.getUsername(), "user"));
+
+        return new UserResponse(newStoredUserCredentials.getUsername(), "User profile created");
     }
 
     public UserResponse updateUserPassword(UserAndNewPassword userAndNewPassword) {
@@ -43,8 +48,10 @@ public class UserServiceImpl implements UserService {
                 userAndNewPassword.getOldPassword());
         UserCredentials newUserCredentials = new UserCredentials(storedUserCredentials.getUsername(),
                 passwordEncoder.encode(userAndNewPassword.getNewPassword()), storedUserCredentials.getMfaKey());
-        String returnedUsername = jdbi.withExtension(UserDao.class, dao -> dao.updateUser(newUserCredentials));
-        return new UserResponse(returnedUsername, "User password updated");
+
+        jdbi.useExtension(UserDao.class, dao -> dao.updateUser(newUserCredentials));
+
+        return new UserResponse(storedUserCredentials.getUsername(), "User password updated");
     }
 
     public UserResponse updateUserMfaKey(UserAndPassword userAndPassword) {
@@ -52,15 +59,19 @@ public class UserServiceImpl implements UserService {
                 userAndPassword.getPassword());
         UserCredentials newUserCredentials = createUserCredentials(storedUserCredentials.getUsername(),
                 storedUserCredentials.getHashedPassword());
-        String returnedUsername = jdbi.withExtension(UserDao.class, dao -> dao.updateUser(newUserCredentials));
-        return new UserResponse(returnedUsername, "User MFA key updated");
+
+        jdbi.useExtension(UserDao.class, dao -> dao.updateUser(newUserCredentials));
+
+        return new UserResponse(storedUserCredentials.getUsername(), "User MFA key updated");
     }
 
     public UserResponse deleteUser(UserAndPassword userAndPassword) {
-        getAndVerifyStoredUserCredentials(userAndPassword.getUsername(), userAndPassword.getPassword());
-        String returnedUsername = jdbi.withExtension(UserDao.class,
-                dao -> dao.deleteUser(userAndPassword.getUsername()));
-        return new UserResponse(returnedUsername, "User profile deleted");
+        UserCredentials storedUserCredentialsToDelete =
+                getAndVerifyStoredUserCredentials(userAndPassword.getUsername(), userAndPassword.getPassword());
+
+        jdbi.useExtension(UserDao.class, dao -> dao.deleteUser(userAndPassword.getUsername()));
+
+        return new UserResponse(storedUserCredentialsToDelete.getUsername(), "User profile deleted");
     }
 
     private UserCredentials createUserCredentials(String username, String password) {
