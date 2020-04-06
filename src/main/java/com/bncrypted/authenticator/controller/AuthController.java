@@ -2,7 +2,6 @@ package com.bncrypted.authenticator.controller;
 
 import com.bncrypted.authenticator.model.TokenCredentials;
 import com.bncrypted.authenticator.model.UserAndOtp;
-import com.bncrypted.authenticator.model.UserResponse;
 import com.bncrypted.authenticator.model.UserTokenDetails;
 import com.bncrypted.authenticator.service.AuthService;
 import org.springframework.http.ResponseEntity;

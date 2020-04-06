@@ -1,7 +1,6 @@
 package integration.com.bncrypted.authenticator.configuration;
 
 import com.bncrypted.authenticator.configuration.SecurityConfiguration;
-import com.bncrypted.authenticator.model.TokenDetails;
 import com.bncrypted.authenticator.model.UserTokenDetails;
 import com.bncrypted.authenticator.util.jwt.JwtHelper;
 import com.bncrypted.authenticator.util.otp.OtpHelper;
