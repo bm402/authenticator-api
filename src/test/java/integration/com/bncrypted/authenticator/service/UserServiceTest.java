@@ -1,6 +1,7 @@
 package integration.com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
+import com.bncrypted.authenticator.model.UserAndMfaKeyResponse;
 import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
 import com.bncrypted.authenticator.model.UserCredentials;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -45,9 +47,14 @@ public class UserServiceTest extends IntegrationBaseTest {
         String newUsername = UUID.randomUUID().toString();
         UserAndPassword newCredentials = new UserAndPassword(newUsername, UUID.randomUUID().toString());
 
-        UserResponse expectedResponse = new UserResponse(newUsername, "User profile created");
-        UserResponse actualResponse = userService.addUser(newCredentials);
-        assertThat(actualResponse).isEqualToComparingFieldByField(expectedResponse);
+        UserAndMfaKeyResponse expectedResponse = new UserAndMfaKeyResponse(newUsername,
+                null, "User profile created");
+        UserAndMfaKeyResponse actualResponse = userService.addUser(newCredentials);
+        assertAll("UserAndMfaKeyResponse",
+                () -> assertEquals(expectedResponse.getUsername(), actualResponse.getUsername()),
+                () -> assertNotNull(actualResponse.getMfaKey()),
+                () -> assertEquals(expectedResponse.getMessage(), actualResponse.getMessage())
+        );
 
         UserCredentials storedUserCredentials = databaseHelper.getUser(newUsername);
         assertNotNull(storedUserCredentials);
@@ -98,9 +105,14 @@ public class UserServiceTest extends IntegrationBaseTest {
     void whenUpdatingUserMfaKeyWithValidPassword_thenMfaKeyShouldBeRegenerated() {
         UserAndPassword validCredentials = new UserAndPassword(username, existingPassword);
 
-        UserResponse expectedResponse = new UserResponse(username, "User MFA key updated");
-        UserResponse actualResponse = userService.updateUserMfaKey(validCredentials);
-        assertThat(actualResponse).isEqualToComparingFieldByField(expectedResponse);
+        UserAndMfaKeyResponse expectedResponse = new UserAndMfaKeyResponse(username,
+                null, "User MFA key updated");
+        UserAndMfaKeyResponse actualResponse = userService.updateUserMfaKey(validCredentials);
+        assertAll("UserAndMfaKeyResponse",
+                () -> assertEquals(expectedResponse.getUsername(), actualResponse.getUsername()),
+                () -> assertNotNull(actualResponse.getMfaKey()),
+                () -> assertEquals(expectedResponse.getMessage(), actualResponse.getMessage())
+        );
 
         UserCredentials storedUserCredentials = databaseHelper.getUser(username);
         assertNotNull(storedUserCredentials);

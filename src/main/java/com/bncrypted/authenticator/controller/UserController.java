@@ -1,5 +1,6 @@
 package com.bncrypted.authenticator.controller;
 
+import com.bncrypted.authenticator.model.UserAndMfaKeyResponse;
 import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
 import com.bncrypted.authenticator.model.UserResponse;
@@ -26,9 +27,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> addUser(@RequestBody @Valid UserAndPassword userAndPassword) {
-        UserResponse userResponse = userService.addUser(userAndPassword);
-        return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+    public ResponseEntity<UserAndMfaKeyResponse> addUser(@RequestBody @Valid UserAndPassword userAndPassword) {
+        UserAndMfaKeyResponse userAndMfaKeyResponse = userService.addUser(userAndPassword);
+        return new ResponseEntity<>(userAndMfaKeyResponse, HttpStatus.CREATED);
     }
 
     @PutMapping("/password")
@@ -38,9 +39,9 @@ public class UserController {
     }
 
     @PutMapping("/mfa-key")
-    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserAndPassword userAndPassword) {
-        UserResponse userResponse = userService.updateUserMfaKey(userAndPassword);
-        return new ResponseEntity<>(userResponse, HttpStatus.OK);
+    public ResponseEntity<UserAndMfaKeyResponse> updateUser(@RequestBody @Valid UserAndPassword userAndPassword) {
+        UserAndMfaKeyResponse userAndMfaKeyResponse = userService.updateUserMfaKey(userAndPassword);
+        return new ResponseEntity<>(userAndMfaKeyResponse, HttpStatus.OK);
     }
 
     @DeleteMapping
