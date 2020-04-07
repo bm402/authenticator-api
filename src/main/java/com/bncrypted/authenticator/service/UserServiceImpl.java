@@ -1,6 +1,7 @@
 package com.bncrypted.authenticator.service;
 
 import com.bncrypted.authenticator.exception.InvalidCredentialsException;
+import com.bncrypted.authenticator.model.UserAndMfaKeyResponse;
 import com.bncrypted.authenticator.model.UserAndNewPassword;
 import com.bncrypted.authenticator.model.UserAndPassword;
 import com.bncrypted.authenticator.model.UserCredentials;
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponse addUser(UserAndPassword userAndPassword) {
+    public UserAndMfaKeyResponse addUser(UserAndPassword userAndPassword) {
         UserCredentials storedUserCredentials = getStoredUserCredentials(userAndPassword.getUsername());
         if (storedUserCredentials != null) {
             throw new InvalidCredentialsException("Username already taken");
@@ -36,11 +37,11 @@ public class UserServiceImpl implements UserService {
         UserCredentials newUserCredentials = createUserCredentials(userAndPassword.getUsername(),
                 userAndPassword.getPassword());
 
-        UserCredentials newStoredUserCredentials =
-                jdbi.withExtension(UserDao.class, dao -> dao.addUser(newUserCredentials));
-        jdbi.useExtension(RoleDao.class, dao -> dao.addUserRole(newStoredUserCredentials.getUsername(), "user"));
+        jdbi.useExtension(UserDao.class, dao -> dao.addUser(newUserCredentials));
+        jdbi.useExtension(RoleDao.class, dao -> dao.addUserRole(newUserCredentials.getUsername(), "user"));
 
-        return new UserResponse(newStoredUserCredentials.getUsername(), "User profile created");
+        return new UserAndMfaKeyResponse(newUserCredentials.getUsername(), newUserCredentials.getMfaKey(),
+                "User profile created");
     }
 
     public UserResponse updateUserPassword(UserAndNewPassword userAndNewPassword) {
@@ -54,15 +55,16 @@ public class UserServiceImpl implements UserService {
         return new UserResponse(storedUserCredentials.getUsername(), "User password updated");
     }
 
-    public UserResponse updateUserMfaKey(UserAndPassword userAndPassword) {
+    public UserAndMfaKeyResponse updateUserMfaKey(UserAndPassword userAndPassword) {
         UserCredentials storedUserCredentials = getAndVerifyStoredUserCredentials(userAndPassword.getUsername(),
                 userAndPassword.getPassword());
         UserCredentials newUserCredentials = createUserCredentials(storedUserCredentials.getUsername(),
-                storedUserCredentials.getHashedPassword());
+                userAndPassword.getPassword());
 
         jdbi.useExtension(UserDao.class, dao -> dao.updateUser(newUserCredentials));
 
-        return new UserResponse(storedUserCredentials.getUsername(), "User MFA key updated");
+        return new UserAndMfaKeyResponse(newUserCredentials.getUsername(), newUserCredentials.getMfaKey(),
+                "User MFA key updated");
     }
 
     public UserResponse deleteUser(UserAndPassword userAndPassword) {
