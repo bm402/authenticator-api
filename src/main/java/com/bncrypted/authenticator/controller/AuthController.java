@@ -35,7 +35,6 @@ public class AuthController {
             @ApiResponse(code = 404, message = "Invalid credentials")
     })
     public ResponseEntity<TokenCredentials> lease(@RequestBody @Valid UserAndOtp userAndOtp) {
-
         TokenCredentials tokenCredentials = authService.lease(userAndOtp);
         return ResponseEntity.ok(tokenCredentials);
     }
