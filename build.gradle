@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.bncrypted"
-version = "0.0.1-SNAPSHOT"
+version = "1.0.0"
 sourceCompatibility = "11"
 
 repositories {
@@ -47,9 +47,15 @@ test {
 }
 
 flyway {
-	url = "jdbc:postgresql://192.168.99.100:8432/authenticator"
-	user = "authuser"
-	password = "authpass"
+	def host = System.getenv("AUTHENTICATOR_DB_HOST") ?: "192.168.99.100"
+	def port = System.getenv("AUTHENTICATOR_DB_PORT") ?: "8432"
+	def name = System.getenv("AUTHENTICATOR_DB_NAME") ?: "authenticator"
+	def username = System.getenv("AUTHENTICATOR_DB_USERNAME") ?: "authuser"
+	def pass = System.getenv("AUTHENTICATOR_DB_PASSWORD") ?: "authpass"
+
+	url = "jdbc:postgresql://" + host + ":" + port + "/" + name
+	user = username
+	password = pass
 }
 
 sonarqube {
